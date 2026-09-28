@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Response
 
 app = FastAPI(title="JanSetu - Mock Departments")
+from api import router
+app.include_router(router)
 
 # ---------- 1. PENSION: modern REST/JSON ----------
 PENSION = {

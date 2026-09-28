@@ -1,0 +1,37 @@
+{
+    "name": "pension_approval",
+    "steps": [
+        {
+            "id": "verify_age",
+            "label": "Age verified",
+            "department": "MUNICIPAL",
+            "rule": {
+                "type": "min_age",
+                "value": 60
+            },
+            "sla_hours": 24,
+            "on_pass": "AGE_VERIFIED"
+        },
+        {
+            "id": "verify_income",
+            "label": "Income verified",
+            "department": "RATION",
+            "rule": {
+                "type": "max_income",
+                "value": 250000
+            },
+            "sla_hours": 48,
+            "on_pass": "INCOME_VERIFIED"
+        },
+        {
+            "id": "approve",
+            "label": "Officer approval",
+            "department": "PENSION",
+            "rule": {
+                "type": "manual"
+            },
+            "sla_hours": 72,
+            "on_pass": "APPROVED"
+        }
+    ]
+}
