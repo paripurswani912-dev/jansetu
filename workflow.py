@@ -6,6 +6,7 @@ from db import get_conn
 from golden import get_citizen
 import audit
 import events
+import issues
 
 WORKFLOW_DIR = "workflows"
 
@@ -146,3 +147,25 @@ def get_tracker(app_id):
     timeline = _q("SELECT ts, department, event, detail FROM timeline "
                   "WHERE application_id=? ORDER BY id", (app_id,))
     return {"application": app, "steps": steps, "timeline": timeline}
+
+def check_sla(app_id=None):
+    """Flag any ACTIVE step whose due_at has passed. Safe to call repeatedly (no duplicates)."""
+    if app_id:
+        rows = _q("SELECT * FROM workflow_steps WHERE application_id=? AND status='ACTIVE'", (app_id,))
+    else:
+        rows = _q("SELECT * FROM workflow_steps WHERE status='ACTIVE'")
+
+    now = datetime.now()
+    breached = []
+    for r in rows:
+        if not r["due_at"] or datetime.fromisoformat(r["due_at"]) >= now:
+            continue
+        marker = f"%{r['step_id']}%"
+        already = _q("SELECT id FROM exceptions WHERE type='SLA_BREACH' AND application_id=? "
+                     "AND detail LIKE ? AND status='OPEN'", (r["application_id"], marker))
+        if already:
+            continue
+        detail = f"{r['step_id']} ({r['label']}) overdue since {r['due_at']}"
+        issues.raise_issue("SLA_BREACH", detail, r["application_id"], None)
+        breached.append(detail)
+    return breached

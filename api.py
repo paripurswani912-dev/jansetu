@@ -3,7 +3,9 @@ from workflow import get_tracker
 import audit
 import events
 
+
 router = APIRouter(prefix="/api")
+
 @router.get("/audit")
 def audit_rows():   
     return audit.all_rows()
@@ -27,3 +29,15 @@ def tracker(application_id: str):
     if t is None:
         raise HTTPException(404, "Unknown application")
     return t
+@router.get("/exceptions")
+def exceptions_list():
+    return issues.open_issues()
+
+@router.get("/dead-letter")
+def dead_letter_list():
+    return issues.dead_letters()
+
+@router.get("/check-sla")
+def run_sla_check():
+    return {"newly_breached": workflow.check_sla()}
+

@@ -3,6 +3,7 @@ from consent import require, ConsentError
 from golden import resolve
 from db import get_conn
 import audit
+import issues
 
 # MOCK crosswalk: a real system would search each department by name + DOB
 CROSSWALK = {
@@ -19,15 +20,35 @@ def login_identity(pension_id: str) -> int:
     return r["citizen_id"]
 
 
-def pull(citizen_id, system, external_id, purpose):
-    """Fetch one system's record for a citizen, only with active consent."""
+class ConnectorError(Exception):
+    pass
+
+
+def pull(citizen_id, system, external_id, purpose, max_retries=3):
     actor = f"citizen:{citizen_id}"
     try:
         consent_id = require(citizen_id, system, purpose)
     except ConsentError as e:
         audit.log("system:gateway", "FETCH_REFUSED", f"{system}:{external_id}", str(e))
         raise
-    person = CONNECTORS[system].fetch(external_id)
+
+    last_err = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            person = CONNECTORS[system].fetch(external_id)
+            break
+        except Exception as e:
+            last_err = e
+            audit.log("system:gateway", "FETCH_RETRY", f"{system}:{external_id}",
+                      f"attempt {attempt}/{max_retries}: {e}")
+    else:
+        issues.record_dead_letter(system, external_id, purpose, str(last_err), max_retries)
+        issues.raise_issue("CONNECTOR_FAILURE",
+                           f"{system}:{external_id} failed after {max_retries} attempts: {last_err}",
+                           None, citizen_id)
+        audit.log("system:gateway", "FETCH_DEAD_LETTER", f"{system}:{external_id}", str(last_err))
+        raise ConnectorError(str(last_err))
+
     r = resolve(person)
     audit.log("system:gateway", "CONSENT_USED", f"consent:{consent_id}",
               f"{system}:{external_id} -> citizen {r['citizen_id']} ({r['match_type']} {r['confidence']})")

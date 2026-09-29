@@ -101,6 +101,26 @@ CREATE TABLE IF NOT EXISTS notifications (
     channel    TEXT,     -- SMS | EMAIL
     message    TEXT
 );
+
+CREATE TABLE IF NOT EXISTS exceptions (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts             TEXT,
+    type           TEXT,     -- SLA_BREACH | DATA_QUALITY | CONNECTOR_FAILURE
+    application_id TEXT,
+    citizen_id     INTEGER,
+    detail         TEXT,
+    status         TEXT      -- OPEN | RESOLVED
+);
+
+CREATE TABLE IF NOT EXISTS dead_letter (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts          TEXT,
+    system      TEXT,
+    external_id TEXT,
+    purpose     TEXT,
+    error       TEXT,
+    attempts    INTEGER
+);
 """
 
 

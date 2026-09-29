@@ -4,6 +4,7 @@ from db import get_conn
 from golden import get_citizen
 from models import Application
 import audit
+import quality
 
 FORM_FIELDS = ["full_name", "dob", "phone", "bank_account",
                "address", "ward", "annual_income", "family_members"]
@@ -12,6 +13,7 @@ FORM_FIELDS = ["full_name", "dob", "phone", "bank_account",
 def create_application(citizen_id: int, scheme: str = "PENSION") -> Application:
     c = get_citizen(citizen_id)
     prefilled = {f: c[f] for f in FORM_FIELDS if c.get(f) is not None}   # what the citizen did NOT retype
+    quality.check_citizen(citizen_id)
     now = datetime.now().isoformat(timespec="seconds")
     conn = get_conn()
     try:
