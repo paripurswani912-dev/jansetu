@@ -2,9 +2,16 @@ from fastapi import APIRouter, HTTPException
 from workflow import get_tracker
 import audit
 import events
+import stats
 
 
 router = APIRouter(prefix="/api")
+
+
+
+@router.get("/dashboard")
+def dashboard():
+    return stats.dashboard()
 
 @router.get("/audit")
 def audit_rows():   

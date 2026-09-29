@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>JanSetu — Official Dashboard</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 24px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .sub {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px 18px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .big {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            font-size: 14px;
+        }
+
+        .ok {
+            color: #1a7f37;
+            font-weight: 600;
+        }
+
+        .degraded {
+            color: #b42318;
+            font-weight: 600;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: #eee;
+            margin: 2px;
+        }
+
+        button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>JanSetu — Official Dashboard</h1>
+    <div class="sub">Live counts from the middleware. <button onclick="load()">Refresh</button></div>
+    <div class="grid" id="grid">Loading…</div>
+
+    <script>
+        async function load() {
+            const d = await (await fetch('/api/dashboard')).json();
+            const statusRows = Object.entries(d.counts_by_status)
+                .map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="row">No applications yet</div>';
+
+            const health = Object.entries(d.connector_health)
+                .map(([k, v]) => `<span class="pill ${v === 'OK' ? 'ok' : 'degraded'}">${k}: ${v}</span>`).join('');
+
+            const excRows = Object.entries(d.open_exceptions)
+                .map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="row">None open</div>';
+
+            document.getElementById('grid').innerHTML = `
+    <div class="card"><h3>Applications by status</h3>${statusRows}</div>
+    <div class="card"><h3>SLA compliance</h3>
+      <div class="big">${d.sla_compliance.percent === null ? '—' : d.sla_compliance.percent + '%'}</div>
+      <div class="row"><span>On time</span><span>${d.sla_compliance.on_time} / ${d.sla_compliance.total}</span></div>
+    </div>
+    <div class="card"><h3>Avg processing time</h3>
+      <div class="big">${d.avg_processing_hours === null ? '—' : d.avg_processing_hours + ' h'}</div>
+    </div>
+    <div class="card"><h3>Connector health</h3>${health}</div>
+    <div class="card"><h3>Open exceptions</h3>${excRows}
+      <div class="row"><strong>Total</strong><strong>${d.open_exceptions_total}</strong></div>
+    </div>
+    <div class="card"><h3>Fields not retyped</h3><div class="big">${d.fields_not_retyped_total}</div></div>
+    <div class="card"><h3>Duplicate profiles avoided</h3><div class="big">${d.duplicates_avoided}</div></div>
+  `;
+        }
+        load();
+    </script>
+</body>
+
+</html>

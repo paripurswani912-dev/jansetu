@@ -2,7 +2,13 @@ from fastapi import FastAPI, HTTPException, Response
 
 app = FastAPI(title="JanSetu - Mock Departments")
 from api import router
+import subscribers
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 app.include_router(router)
+
+subscribers.register()
 
 # ---------- 1. PENSION: modern REST/JSON ----------
 PENSION = {
