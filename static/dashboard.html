@@ -90,30 +90,26 @@
     <div class="grid" id="grid">Loading…</div>
 
     <script>
+        const user = JSON.parse(localStorage.getItem('jansetu_user') || 'null');
+        if (!user || user.role === 'citizen') window.location.href = '/static/login.html';
+
         async function load() {
-            const d = await (await fetch('/api/dashboard')).json();
+            const d = await (await fetch(`/api/dashboard?user_id=${user.user_id}`)).json();
             const statusRows = Object.entries(d.counts_by_status)
                 .map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="row">No applications yet</div>';
-
             const health = Object.entries(d.connector_health)
                 .map(([k, v]) => `<span class="pill ${v === 'OK' ? 'ok' : 'degraded'}">${k}: ${v}</span>`).join('');
-
             const excRows = Object.entries(d.open_exceptions)
                 .map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="row">None open</div>';
-
             document.getElementById('grid').innerHTML = `
     <div class="card"><h3>Applications by status</h3>${statusRows}</div>
     <div class="card"><h3>SLA compliance</h3>
       <div class="big">${d.sla_compliance.percent === null ? '—' : d.sla_compliance.percent + '%'}</div>
       <div class="row"><span>On time</span><span>${d.sla_compliance.on_time} / ${d.sla_compliance.total}</span></div>
     </div>
-    <div class="card"><h3>Avg processing time</h3>
-      <div class="big">${d.avg_processing_hours === null ? '—' : d.avg_processing_hours + ' h'}</div>
-    </div>
+    <div class="card"><h3>Avg processing time</h3><div class="big">${d.avg_processing_hours === null ? '—' : d.avg_processing_hours + ' h'}</div></div>
     <div class="card"><h3>Connector health</h3>${health}</div>
-    <div class="card"><h3>Open exceptions</h3>${excRows}
-      <div class="row"><strong>Total</strong><strong>${d.open_exceptions_total}</strong></div>
-    </div>
+    <div class="card"><h3>Open exceptions</h3>${excRows}<div class="row"><strong>Total</strong><strong>${d.open_exceptions_total}</strong></div></div>
     <div class="card"><h3>Fields not retyped</h3><div class="big">${d.fields_not_retyped_total}</div></div>
     <div class="card"><h3>Duplicate profiles avoided</h3><div class="big">${d.duplicates_avoided}</div></div>
   `;

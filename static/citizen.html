@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>JanSetu — My Applications</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 24px;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #1a56db;
+            color: #fff;
+            border: none;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .step {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .PASSED,
+        .APPROVED {
+            color: #1a7f37;
+        }
+
+        .FAILED,
+        .REJECTED {
+            color: #b42318;
+        }
+
+        .ACTIVE,
+        .SUBMITTED {
+            color: #9a6700;
+        }
+
+        .notif {
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top">
+        <div><strong id="who"></strong></div>
+        <div>
+            <button class="primary" onclick="apply()">Apply for Pension</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>My applications</h3>
+        <div id="apps">Loading…</div>
+    </div>
+    <div class="card">
+        <h3>Notifications</h3>
+        <div id="notifs"></div>
+    </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('jansetu_user') || 'null');
+        if (!user || user.role !== 'citizen') window.location.href = '/static/login.html';
+        document.getElementById('who').textContent = user.label;
+
+        function logout() { localStorage.removeItem('jansetu_user'); window.location.href = '/static/login.html'; }
+
+        async function apply() {
+            const r = await fetch('/api/apply', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.user_id })
+            });
+            if (!r.ok) { alert('Could not apply: ' + (await r.json()).detail); return; }
+            loadApps();
+        }
+
+        async function loadApps() {
+            const apps = await (await fetch(`/api/my-applications?user_id=${user.user_id}`)).json();
+            if (!apps.length) { document.getElementById('apps').innerHTML = 'No applications yet.'; return; }
+            let html = '';
+            for (const a of apps) {
+                const t = await (await fetch(`/api/tracker/${a.application_id}?user_id=${user.user_id}`)).json();
+                html += `<div style="margin-bottom:12px"><strong>${a.application_id}</strong> — <span class="${t.application.status}">${t.application.status}</span>`;
+                for (const s of t.steps) {
+                    html += `<div class="step"><span>${s.label}</span><span class="${s.status}">${s.status}${s.result ? ' — ' + s.result : ''}</span></div>`;
+                }
+                html += `</div>`;
+            }
+            document.getElementById('apps').innerHTML = html;
+        }
+
+        async function loadNotifs() {
+            const n = await (await fetch(`/api/notifications/${user.citizen_id}?user_id=${user.user_id}`)).json();
+            document.getElementById('notifs').innerHTML = n.map(x =>
+                `<div class="notif">[${x.channel}] ${x.message}</div>`).join('') || 'None yet.';
+        }
+
+        loadApps();
+        loadNotifs();
+    </script>
+</body>
+
+</html>

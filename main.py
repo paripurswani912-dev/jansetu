@@ -4,9 +4,15 @@ app = FastAPI(title="JanSetu - Mock Departments")
 from api import router
 import subscribers
 from fastapi.staticfiles import StaticFiles
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+from fastapi.responses import RedirectResponse
+
+@app.get("/")
+def root():
+    return RedirectResponse("/static/login.html")
 
 subscribers.register()
 
