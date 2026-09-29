@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, date
 from db import get_conn
 from golden import get_citizen
 import audit
+import events
 
 WORKFLOW_DIR = "workflows"
 
@@ -82,17 +83,19 @@ def _finish(app_id, step, passed, detail, actor="system:workflow"):
     spec = json.loads(step["spec"])
     _exec("UPDATE workflow_steps SET status=?, completed_at=?, result=? WHERE id=?",
           ("PASSED" if passed else "FAILED", _iso(datetime.now()), detail, step["id"]))
+    app = _q("SELECT citizen_id FROM applications WHERE application_id=?", (app_id,))[0]
     if passed:
         _exec("UPDATE applications SET status=? WHERE application_id=?", (spec["on_pass"], app_id))
         _timeline(app_id, step["department"], spec["on_pass"], f"{step['label']}: {detail}")
         audit.log(actor, "STEP_PASSED", app_id, f"{step['step_id']} | {detail}")
+        events.publish("STEP_RESULT", app_id, app["citizen_id"], spec["on_pass"])
     else:
         _exec("UPDATE applications SET status='REJECTED' WHERE application_id=?", (app_id,))
         _exec("UPDATE workflow_steps SET status='SKIPPED' WHERE application_id=? AND status='PENDING'",
               (app_id,))
         _timeline(app_id, step["department"], "REJECTED", f"{step['label']} failed: {detail}")
         audit.log(actor, "STEP_FAILED", app_id, f"{step['step_id']} | {detail}")
-
+        events.publish("STEP_RESULT", app_id, app["citizen_id"], "REJECTED")
 
 def advance(app_id):
     """Run steps until the application finishes or waits for a human."""

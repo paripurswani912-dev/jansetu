@@ -85,6 +85,22 @@ CREATE TABLE IF NOT EXISTS timeline (
     event          TEXT,
     detail         TEXT
 );
+CREATE TABLE IF NOT EXISTS events (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts             TEXT,
+    application_id TEXT,
+    citizen_id     INTEGER,
+    type           TEXT,
+    detail         TEXT
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts         TEXT,
+    citizen_id INTEGER,
+    channel    TEXT,     -- SMS | EMAIL
+    message    TEXT
+);
 """
 
 

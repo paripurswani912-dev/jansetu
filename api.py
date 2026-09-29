@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from workflow import get_tracker
 import audit
+import events
+
 router = APIRouter(prefix="/api")
 @router.get("/audit")
 def audit_rows():   
@@ -10,6 +12,14 @@ def audit_rows():
 def audit_verify():
     return audit.verify()
 
+
+@router.get("/notifications/{citizen_id}")
+def notifications(citizen_id: int):
+    return events.all_notifications(citizen_id)
+
+@router.get("/events")
+def all_events():
+    return events.all_events()
 
 @router.get("/tracker/{application_id}")
 def tracker(application_id: str):
