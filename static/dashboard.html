@@ -81,6 +81,8 @@
             background: #fff;
             cursor: pointer;
         }
+
+        <button onclick="resetDemo()" style="background:#b42318;color:#fff;border:none;">Reset demo</button>
     </style>
 </head>
 
@@ -112,7 +114,15 @@
     <div class="card"><h3>Open exceptions</h3>${excRows}<div class="row"><strong>Total</strong><strong>${d.open_exceptions_total}</strong></div></div>
     <div class="card"><h3>Fields not retyped</h3><div class="big">${d.fields_not_retyped_total}</div></div>
     <div class="card"><h3>Duplicate profiles avoided</h3><div class="big">${d.duplicates_avoided}</div></div>
-  `;
+  `; async function resetDemo() {
+                if (!confirm('This clears ALL demo data. Continue?')) return;
+                const r = await fetch('/api/reset', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.user_id })
+                });
+                if (r.ok) { alert('Demo reset. Re-seed data before presenting again.'); location.reload(); }
+                else { alert('Reset failed: ' + (await r.json()).detail); }
+            }
         }
         load();
     </script>

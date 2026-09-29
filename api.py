@@ -13,6 +13,7 @@ from consent import grant
 from gateway import pull_all
 from applications import create_application
 from db import get_conn
+from db import reset_db
 
 router = APIRouter(prefix="/api")
 
@@ -130,3 +131,10 @@ def audit_verify(user_id: str):
 def all_events(user_id: str):
     require_role(resolve_user(user_id), *STAFF)
     return events.all_events()
+
+
+@router.post("/reset")
+def reset_demo(user_id: str = Body(..., embed=True)):
+    require_role(resolve_user(user_id), "admin")
+    reset_db()
+    return {"ok": True, "message": "Demo reset. All data cleared."}
