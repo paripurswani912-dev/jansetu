@@ -9,6 +9,16 @@ import quality
 FORM_FIELDS = ["full_name", "dob", "phone", "bank_account",
                "address", "ward", "annual_income", "family_members"]
 
+def create_application(citizen_id: int, scheme: str = "PENSION") -> Application:
+    conn = get_conn()
+    try:
+        existing = conn.execute(
+            "SELECT application_id FROM applications WHERE citizen_id=? AND scheme=? "
+            "AND status NOT IN ('APPROVED','REJECTED')", (citizen_id, scheme)).fetchone()
+    finally:
+        conn.close()
+    if existing:
+        raise ValueError(f"Already has an in-progress {scheme} application: {existing['application_id']}")
 
 def create_application(citizen_id: int, scheme: str = "PENSION") -> Application:
     c = get_citizen(citizen_id)
