@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>JanSetu — Official Dashboard</title>
+    <title>SetuCare — Official Dashboard</title>
     <style>
         body {
             font-family: system-ui, sans-serif;
@@ -81,17 +81,23 @@
             background: #fff;
             cursor: pointer;
         }
-
-        <button onclick="resetDemo()" style="background:#b42318;color:#fff;border:none;">Reset demo</button>
     </style>
 </head>
 
 <body>
-    <h1>JanSetu — Official Dashboard</h1>
-    <div class="sub">Live counts from the middleware. <button onclick="load()">Refresh</button></div>
+    <script src="/static/nav.js"></script>
+    <h1>SetuCare — Official Dashboard</h1>
+    <div class="sub">
+        Live counts from the middleware.
+        <button onclick="load()">Refresh</button>
+
+    </div>
     <div class="grid" id="grid">Loading…</div>
 
     <script>
+        renderNav('dashboard');
+        renderFooter();
+
         const user = JSON.parse(localStorage.getItem('jansetu_user') || 'null');
         if (!user || user.role === 'citizen') window.location.href = '/static/login.html';
 
@@ -114,16 +120,9 @@
     <div class="card"><h3>Open exceptions</h3>${excRows}<div class="row"><strong>Total</strong><strong>${d.open_exceptions_total}</strong></div></div>
     <div class="card"><h3>Fields not retyped</h3><div class="big">${d.fields_not_retyped_total}</div></div>
     <div class="card"><h3>Duplicate profiles avoided</h3><div class="big">${d.duplicates_avoided}</div></div>
-  `; async function resetDemo() {
-                if (!confirm('This clears ALL demo data. Continue?')) return;
-                const r = await fetch('/api/reset', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: user.user_id })
-                });
-                if (r.ok) { alert('Demo reset. Re-seed data before presenting again.'); location.reload(); }
-                else { alert('Reset failed: ' + (await r.json()).detail); }
-            }
+  `;
         }
+
         load();
     </script>
 </body>

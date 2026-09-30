@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>JanSetu — My Applications</title>
+    <title>SetuCare — My Applications</title>
     <style>
         body {
             font-family: system-ui, sans-serif;
@@ -73,6 +73,8 @@
 </head>
 
 <body>
+    <script src="/static/nav.js"></script>
+
     <div class="top">
         <div><strong id="who"></strong></div>
         <div>
@@ -94,6 +96,7 @@
         const user = JSON.parse(localStorage.getItem('jansetu_user') || 'null');
         if (!user || user.role !== 'citizen') window.location.href = '/static/login.html';
         document.getElementById('who').textContent = user.label;
+        renderNav('citizen'); renderFooter();
 
         function logout() { localStorage.removeItem('jansetu_user'); window.location.href = '/static/login.html'; }
 

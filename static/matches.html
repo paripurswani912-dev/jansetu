@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>SetuCare — Identity Matches</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+        }
+
+        .wrap {
+            padding: 24px;
+        }
+
+        .citizen {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+        }
+
+        .link {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .EXACT {
+            color: #1a7f37;
+        }
+
+        .FUZZY {
+            color: #9a6700;
+            font-weight: 600;
+        }
+
+        .NEW {
+            color: #666;
+        }
+
+        .bar {
+            background: #eee;
+            border-radius: 6px;
+            height: 8px;
+            width: 120px;
+            overflow: hidden;
+        }
+
+        .bar div {
+            background: #9a6700;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="/static/nav.js"></script>
+    <div class="wrap">
+        <p style="font-family:system-ui,sans-serif;color:#666;padding:0 24px">
+            Records from separate departments, linked to one citizen. FUZZY = matched despite a formatting difference
+            (e.g. an abbreviated name), shown with its confidence score.</p>
+        <div id="citizens"></div>
+    </div>
+    <script>
+        renderNav('matches'); renderFooter();
+        const user = JSON.parse(localStorage.getItem('jansetu_user') || 'null');
+        if (!user || user.role === 'citizen') location.href = '/static/login.html';
+
+        (async () => {
+            const rows = await (await fetch(`/api/identity-links?user_id=${user.user_id}`)).json();
+            const byCitizen = {};
+            rows.forEach(r => { (byCitizen[r.citizen_id] ??= []).push(r); });
+            document.getElementById('citizens').innerHTML = Object.entries(byCitizen).map(([cid, links]) => `
+    <div class="citizen">
+      <h3>${links[0].full_name} <span style="color:#999;font-weight:400">(citizen ${cid})</span></h3>
+      ${links.map(l => `
+        <div class="link">
+          <span>${l.system} — ${l.external_id}</span>
+          <span class="bar"><div style="width:${l.match_confidence * 100}%"></div></span>
+          <span class="${l.match_type}">${l.match_type} ${l.match_confidence}</span>
+        </div>`).join('')}
+    </div>`).join('');
+        })();
+    </script>
+</body>
+
+</html>

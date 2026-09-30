@@ -1,0 +1,37 @@
+{
+    "name": "ration_renewal",
+    "steps": [
+        {
+            "id": "verify_family_size",
+            "label": "Family size verified",
+            "department": "RATION",
+            "rule": {
+                "type": "min_family_members",
+                "value": 1
+            },
+            "sla_hours": 24,
+            "on_pass": "FAMILY_VERIFIED"
+        },
+        {
+            "id": "verify_residence",
+            "label": "Residence verified",
+            "department": "MUNICIPAL",
+            "rule": {
+                "type": "min_age",
+                "value": 0
+            },
+            "sla_hours": 24,
+            "on_pass": "RESIDENCE_VERIFIED"
+        },
+        {
+            "id": "approve",
+            "label": "Clerk approval",
+            "department": "RATION",
+            "rule": {
+                "type": "manual"
+            },
+            "sla_hours": 48,
+            "on_pass": "APPROVED"
+        }
+    ]
+}

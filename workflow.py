@@ -57,9 +57,14 @@ def rule_max_income(c, value):
     if inc is None:
         return False, "income missing"
     return inc <= value, f"income {inc} (limit {value})"
+def rule_min_family_members(c, value):
+    n = c.get("family_members")
+    if n is None:
+        return False, "family size missing"
+    return n >= value, f"family size {n} (minimum {value})"
+RULES = {"min_age": rule_min_age, "max_income": rule_max_income, "min_family_members": rule_min_family_members}
 
 
-RULES = {"min_age": rule_min_age, "max_income": rule_max_income}   # "manual" is handled below
 
 
 def load_workflow(scheme):
@@ -169,3 +174,4 @@ def check_sla(app_id=None):
         issues.raise_issue("SLA_BREACH", detail, r["application_id"], None)
         breached.append(detail)
     return breached
+

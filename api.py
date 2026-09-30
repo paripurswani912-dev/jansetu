@@ -138,3 +138,18 @@ def reset_demo(user_id: str = Body(..., embed=True)):
     require_role(resolve_user(user_id), "admin")
     reset_db()
     return {"ok": True, "message": "Demo reset. All data cleared."}
+
+
+@router.get("/identity-links")
+def identity_links(user_id: str):
+    require_role(resolve_user(user_id), *STAFF)
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT sl.citizen_id, c.full_name, sl.system, sl.external_id, "
+            "sl.match_confidence, sl.match_type FROM source_links sl "
+            "JOIN citizens c ON c.citizen_id = sl.citizen_id ORDER BY sl.citizen_id, sl.id"
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()

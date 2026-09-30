@@ -9,6 +9,14 @@ app.include_router(router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def custom_404(request, exc):
+    if exc.status_code == 404:
+        return FileResponse("static/404.html", status_code=404)
+    raise exc
 
 @app.get("/")
 def root():
