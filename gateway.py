@@ -9,6 +9,9 @@ import issues
 CROSSWALK = {
     "PEN-1001": {"MUNICIPAL": "MUN-77", "RATION": "BR-0099"},
     "PEN-1002": {"MUNICIPAL": "MUN-78", "RATION": "BR-0100"},
+    "PEN-1003": {"MUNICIPAL": "MUN-79", "RATION": "BR-0101"},
+    "PEN-1004": {"MUNICIPAL": "MUN-80", "RATION": "BR-0102"},
+    "PEN-1005": {"MUNICIPAL": "MUN-81", "RATION": "BR-0103"},
 }
 
 
