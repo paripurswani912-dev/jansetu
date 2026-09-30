@@ -19,6 +19,21 @@ router = APIRouter(prefix="/api")
 
 
 # ---------- auth ----------
+from applications import create_application, DuplicateApplicationError
+
+@router.post("/apply")
+def apply(user_id: str = Body(...), scheme: str = Body("PENSION")):
+    user = resolve_user(user_id)
+    require_role(user, "citizen")
+    cid = user["citizen_id"]
+    grant(cid, "PENSION_APPLICATION")
+    pull_all(cid, "PENSION_APPLICATION")
+    try:
+        app = create_application(cid, scheme)
+    except DuplicateApplicationError as e:
+        raise HTTPException(400, str(e))
+    workflow.start(app.application_id)
+    return {"application_id": app.application_id, "fields_autofilled": app.fields_autofilled}
 @router.get("/users")
 def list_users():
     return [{"user_id": k, "label": v["label"], "role": v["role"]} for k, v in MOCK_USERS.items()]
