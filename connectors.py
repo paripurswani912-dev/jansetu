@@ -5,7 +5,10 @@ import requests
 from models import Person, SourceRef
 from normalize import clean_name, name_key, to_iso
 
-BASE_URL = "http://127.0.0.1:8000"   # your mock departments (same server)
+import os
+
+PORT = os.environ.get("PORT", "8000")
+BASE_URL = f"http://127.0.0.1:{PORT}"
 
 
 class Connector:
