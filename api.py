@@ -153,3 +153,17 @@ def identity_links(user_id: str):
         return [dict(r) for r in rows]
     finally:
         conn.close()
+@router.get("/pending-approvals")
+def pending_approvals(user_id: str):
+    require_role(resolve_user(user_id), "officer", "admin")
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT ws.application_id, a.citizen_id, c.full_name, ws.label, ws.due_at "
+            "FROM workflow_steps ws "
+            "JOIN applications a ON a.application_id = ws.application_id "
+            "JOIN citizens c ON c.citizen_id = a.citizen_id "
+            "WHERE ws.status='ACTIVE' AND ws.spec LIKE '%\"manual\"%'").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()

@@ -90,7 +90,6 @@
     <div class="sub">
         Live counts from the middleware.
         <button onclick="load()">Refresh</button>
-
     </div>
     <div class="grid" id="grid">Loading…</div>
 
@@ -103,13 +102,27 @@
 
         async function load() {
             const d = await (await fetch(`/api/dashboard?user_id=${user.user_id}`)).json();
+            const pending = await (await fetch(`/api/pending-approvals?user_id=${user.user_id}`)).json();
+
             const statusRows = Object.entries(d.counts_by_status)
                 .map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="row">No applications yet</div>';
             const health = Object.entries(d.connector_health)
                 .map(([k, v]) => `<span class="pill ${v === 'OK' ? 'ok' : 'degraded'}">${k}: ${v}</span>`).join('');
             const excRows = Object.entries(d.open_exceptions)
                 .map(([k, v]) => `<div class="row"><span>${k}</span><span>${v}</span></div>`).join('') || '<div class="row">None open</div>';
+            const pendingRows = pending.length
+                ? pending.map(p => `
+        <div class="row">
+          <span>${p.application_id} — ${p.full_name}</span>
+          <span>
+            <button onclick="decide('${p.application_id}', true)">Approve</button>
+            <button onclick="decide('${p.application_id}', false)">Reject</button>
+          </span>
+        </div>`).join('')
+                : '<div class="row">Nothing pending</div>';
+
             document.getElementById('grid').innerHTML = `
+    <div class="card"><h3>Pending approvals</h3>${pendingRows}</div>
     <div class="card"><h3>Applications by status</h3>${statusRows}</div>
     <div class="card"><h3>SLA compliance</h3>
       <div class="big">${d.sla_compliance.percent === null ? '—' : d.sla_compliance.percent + '%'}</div>
@@ -121,6 +134,15 @@
     <div class="card"><h3>Fields not retyped</h3><div class="big">${d.fields_not_retyped_total}</div></div>
     <div class="card"><h3>Duplicate profiles avoided</h3><div class="big">${d.duplicates_avoided}</div></div>
   `;
+        }
+
+        async function decide(applicationId, approve) {
+            const r = await fetch('/api/decide', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.user_id, application_id: applicationId, approve })
+            });
+            if (r.ok) load();
+            else alert('Failed: ' + (await r.json()).detail);
         }
 
         load();
