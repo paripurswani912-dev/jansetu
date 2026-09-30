@@ -155,7 +155,7 @@ def identity_links(user_id: str):
         conn.close()
 @router.get("/pending-approvals")
 def pending_approvals(user_id: str):
-    require_role(resolve_user(user_id), "officer", "admin")
+    require_role(resolve_user(user_id), "clerk", "officer", "admin")
     conn = get_conn()
     try:
         rows = conn.execute(

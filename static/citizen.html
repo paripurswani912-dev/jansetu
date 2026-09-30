@@ -76,10 +76,9 @@
     <script src="/static/nav.js"></script>
 
     <div class="top">
-        <div><strong id="who"></strong></div>
+        <div></div>
         <div>
             <button class="primary" onclick="apply()">Apply for Pension</button>
-            <button onclick="logout()">Logout</button>
         </div>
     </div>
 
@@ -95,10 +94,7 @@
     <script>
         const user = JSON.parse(localStorage.getItem('jansetu_user') || 'null');
         if (!user || user.role !== 'citizen') window.location.href = '/static/login.html';
-        document.getElementById('who').textContent = user.label;
         renderNav('citizen'); renderFooter();
-
-        function logout() { localStorage.removeItem('jansetu_user'); window.location.href = '/static/login.html'; }
 
         async function apply() {
             const r = await fetch('/api/apply', {
